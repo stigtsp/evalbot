@@ -58,81 +58,16 @@ package Evalbot;
     my $max_output_len = 290;
 
     my %aliases = (
-        master  => ['rakudo-moar'],
-        rakudo  => ['rakudo-moar'],
-        r       => ['rakudo-moar', 'rakudo-jvm'],
-        'r-m'   => 'rakudo-moar',
-        'rm'    => 'rakudo-moar',
-        m       => 'rakudo-moar',
         p6  => [qw/rakudo-moar/],
-        perl6  => [qw/rakudo-moar rakudo-jvm/],
-        nqp => [qw/nqp-moarvm/],
-        'nqp-m'   => 'nqp-moarvm',
-        'nqp-mvm' => 'nqp-moarvm',
-        'nqp-q'   => 'nqp-js',
-        'r-jvm'   => 'rakudo-jvm',
-        'r-j'     => 'rakudo-jvm',
-        'rj'      => 'rakudo-jvm',
-        'j'       => 'rakudo-jvm',
-        'p56'     => 'p5-to-p6',
-        star      => 'star-m',
-        sm        => 'star-m',
     );
 
     our %impls = (
             'rakudo-moar' => {
                 chdir       => "$home",
-                cmd_line    => 'firejail --private --caps.drop=all --cpu=0 --nosound --novideo --net=none --nodbus --noroot --private-tmp --seccomp --quiet --timeout=00:00:30 --x11=none -c ./rakudo-m-inst/bin/perl6-m --setting=RESTRICTED %program',
+                cmd_line    => 'firejail --nonewprivs --noroot --whitelist=%program --caps.drop=all --seccomp --quiet --net=none --read-only=/ --private --private-tmp --private-dev --read-only=/home --rlimit-fsize=52428800 --rlimit-nproc=30 --rlimit-cpu=2 --read-only=/opt --read-only=/var --private-etc=group,hostname,localtime,nsswitch.conf,passwd,resolv.conf -c /opt/rakudo-m-inst-1/bin/perl6-m --setting=RESTRICTED %program',
                 nolock      => 1,
-                revision    => sub { get_revision_from_file("$home/rakudo-m-inst/revision")},
+                revision    => sub { get_revision_from_file("/opt/rakudo-m-inst-1/revision")},
             },
-            'prof-m' => {
-                chdir       => "$home",
-                cmd_line    => './rakudo-inst/bin/perl6-m --profile --profile-filename=/tmp/mprof.html --setting=RESTRICTED %program',
-                nolock      => 1,
-                revision    => sub { get_revision_from_file("$home/rakudo-inst/revision")},
-                post        => sub {
-                    my ($output) = @_;
-                    my $destfile = sprintf "%x", time - 1420066800; # seconds since 2015-01-01
-                    print "\nnow running scp...\n";
-                    system("scp", '-q', '/tmp/mprof.html', "p.p6c.org\@www.p6c.org:public/$destfile.html");
-                    return ('Prof' => "http://p.p6c.org/$destfile");
-                },
-            },
-            'star-m' => {
-                chdir       => "$home/star/",
-                cmd_line    => './bin/perl6-m --setting=RESTRICTED %program',
-                revision    => sub { get_revision_from_file("$home/star/version") },
-            },
-            'nqp-jvm'    => {
-                chdir       => $home,
-                cmd_line    => './rakudo-j-inst/bin/nqp-j %program',
-            },
-            'nqp-moarvm' => {
-                chdir       => $home,
-                cmd_line    => './rakudo-m-inst/bin/nqp-m %program',
-            },
-            'nqp-js'     => {
-                chdir       => "$home/nqp-js",
-                cmd_line    => './nqp-js %program',
-            },
-            'rakudo-jvm' => {
-                chdir       => $home,
-                cmd_line    => "$^X $home/rakudo-j-inst/bin/eval-client.pl $home/p6eval-token run_limited 15  %program",
-                revision    => sub { get_revision_from_file("$home/rakudo-j-inst/revision")},
-            },
-            'p5-to-p6' => {
-                chdir       => "$home/Perlito",
-                cmd_line    => "perl perlito5.pl --noboilerplate -I./src5/lib -Cperl6 %program",
-                revision    => sub {
-                    my $r = qx/cd $home && Perlito && git describe/;
-                    chomp $r;
-                    return $r;
-                },
-            },
-            'debug-cat' => {
-                cmd_line => 'cat %program',
-            }
     );
 
     my $evalbot_version = get_revision();
