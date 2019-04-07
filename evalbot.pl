@@ -82,7 +82,7 @@ package Evalbot;
     our %impls = (
             'rakudo-moar' => {
                 chdir       => "$home",
-                cmd_line    => './rakudo-m-inst/bin/perl6-m --setting=RESTRICTED %program',
+                cmd_line    => 'firejail --private --caps.drop=all --cpu=0 --nosound --novideo --net=none --nodbus --noroot --private-tmp --seccomp --quiet --timeout=00:00:30 --x11=none -c ./rakudo-m-inst/bin/perl6-m --setting=RESTRICTED %program',
                 nolock      => 1,
                 revision    => sub { get_revision_from_file("$home/rakudo-m-inst/revision")},
             },
